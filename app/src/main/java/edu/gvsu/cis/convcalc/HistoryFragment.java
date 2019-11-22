@@ -31,14 +31,13 @@ public class HistoryFragment extends Fragment {
     // TODO: Customize parameters
     private int mColumnCount = 1;
     private OnListFragmentInteractionListener mListener;
-    List<HistoryItem> allHistory;
+    private List<HistoryItem> allHistory;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
     public HistoryFragment() {
-        allHistory = MainActivity.allHistory;
     }
 
     // TODO: Customize parameter initialization
@@ -54,7 +53,7 @@ public class HistoryFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        allHistory = MainActivity.allHistory;
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
@@ -74,7 +73,7 @@ public class HistoryFragment extends Fragment {
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
-            //recyclerView.setAdapter(new HistoryAdapter(HistoryContent.ITEMS, mListener));
+//            recyclerView.setAdapter(new HistoryAdapter(HistoryContent.ITEMS, mListener));
             recyclerView.setAdapter(new HistoryAdapter(allHistory, mListener));
             DividerItemDecoration did = new DividerItemDecoration(recyclerView.getContext(),
                     DividerItemDecoration.VERTICAL);

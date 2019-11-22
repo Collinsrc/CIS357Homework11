@@ -31,8 +31,11 @@ import edu.gvsu.cis.convcalc.dummy.HistoryContent;
 
 public class MainActivity extends AppCompatActivity {
 
+    DatabaseReference topRef;
     public static int SETTINGS_RESULT = 1;
     public static int HISTORY_RESULT = 2;
+    public static List<HistoryContent.HistoryItem> allHistory;
+
 
     private enum Mode {Length, Volume};
 
@@ -49,13 +52,11 @@ public class MainActivity extends AppCompatActivity {
     private TextView fromUnits;
     private TextView title;
 
-    DatabaseReference topRef;
-    public static List<HistoryContent.HistoryItem> allHistory;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         allHistory = new ArrayList<HistoryContent.HistoryItem>();
         calcButton = findViewById(R.id.calcButton);
         clearButton = findViewById(R.id.clearButton);
@@ -115,22 +116,8 @@ public class MainActivity extends AppCompatActivity {
 //
     }
 
-    @Override
-    public void onResume(){
-        super.onResume();
-        allHistory.clear();
-        topRef = FirebaseDatabase.getInstance().getReference("history");
-        topRef.addChildEventListener (chEvListener);
-    }
-
-    @Override
-    public void onPause(){
-        super.onPause();
-        topRef.removeEventListener(chEvListener);
-    }
-
-
     private void doConversion() {
+        edu.gvsu.cis.convcalc.weatherservice.WeatherService.startGetWeather(this, "42.963686", "-85.888595", "p1");
         EditText dest = null;
         String val = "";
         String fromVal = fromField.getText().toString();
@@ -143,7 +130,6 @@ public class MainActivity extends AppCompatActivity {
             val = toVal;
             dest = fromField;
         }
-        HistoryContent.HistoryItem item;
         if (dest != null) {
             switch(mode) {
                 case Length:
@@ -160,14 +146,10 @@ public class MainActivity extends AppCompatActivity {
                     dest.setText(Double.toString(cVal));
                     // remember the calculation.
                     DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
-                    item = new HistoryContent.HistoryItem(dVal, cVal, mode.toString(),
+                    HistoryContent.HistoryItem item = new HistoryContent.HistoryItem(dVal, cVal, mode.toString(),
                             fUnits.toString(), tUnits.toString(), fmt.print(DateTime.now()));
                     HistoryContent.addItem(item);
                     topRef.push().setValue(item);
-
-//                    item = new HistoryContent.HistoryItem(dVal, cVal, mode.toString(),
-//                            toUnits.getText().toString(), fromUnits.getText().toString(), DateTime.now());
-//                    HistoryContent.addItem(item);
                     break;
                 case Volume:
                     VolumeUnits vtUnits, vfUnits;
@@ -182,14 +164,11 @@ public class MainActivity extends AppCompatActivity {
                     Double vcVal = UnitsConverter.convert(vdVal, vfUnits, vtUnits);
                     dest.setText(Double.toString(vcVal));
                     // remember the calculation.
-                    DateTimeFormatter fmt2 = ISODateTimeFormat.dateTime();
-                    item = new HistoryContent.HistoryItem(vdVal, vcVal, mode.toString(),
-                            vfUnits.toString(), vtUnits.toString(), fmt2.print(DateTime.now()));
-                    HistoryContent.addItem(item);
-                    topRef.push().setValue(item);
-//                    item = new HistoryContent.HistoryItem(vdVal, vcVal, mode.toString(),
-//                            toUnits.getText().toString(), fromUnits.getText().toString(), DateTime.now());
-//                    HistoryContent.addItem(item);
+                    DateTimeFormatter vfmt = ISODateTimeFormat.dateTime();
+                    HistoryContent.HistoryItem vitem = new HistoryContent.HistoryItem(vdVal, vcVal, mode.toString(),
+                            vfUnits.toString(), vtUnits.toString(), vfmt.print(DateTime.now()));
+                    HistoryContent.addItem(vitem);
+                    topRef.push().setValue(vitem);
                     break;
             }
 
@@ -252,6 +231,19 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onResume(){
+        super.onResume();
+        topRef = FirebaseDatabase.getInstance().getReference("history");
+        topRef.addChildEventListener (chEvListener);
+    }
+
+    @Override
+    public void onPause(){
+        super.onPause();
+        topRef.removeEventListener(chEvListener);
+    }
+
     private ChildEventListener chEvListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -288,6 +280,5 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
-
 
 }
